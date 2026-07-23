@@ -1,0 +1,18 @@
+[package]
+name = "counter-old"
+version = "0.1.0"
+edition = "2021"
+description = "Baseline version of the Preflight example counter program"
+
+[lib]
+crate-type = ["cdylib", "lib"]
+
+[dependencies]
+borsh = "1.8"
+solana-program = { version = "4.0", features = ["borsh"] }
+
+# Isolated from any parent workspace: this crate is built independently via
+# `cargo build-sbf` and must not share a Cargo.lock with the host tooling
+# crates under crates/, which pull in a much larger, unrelated dependency
+# graph (litesvm, clap, etc).
+[workspace]

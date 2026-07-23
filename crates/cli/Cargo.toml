@@ -1,0 +1,20 @@
+[package]
+name = "preflight-cli"
+version = "0.1.0"
+edition = "2021"
+description = "Command-line interface for Preflight"
+
+[[bin]]
+name = "preflight"
+path = "src/main.rs"
+
+[dependencies]
+preflight-comparator = { path = "../comparator" }
+preflight-replay = { path = "../replay" }
+preflight-report = { path = "../report" }
+preflight-shared = { path = "../shared" }
+
+anyhow = "1"
+clap = { version = "4", features = ["derive"] }
+console = "0.15"
+indicatif = "0.17"

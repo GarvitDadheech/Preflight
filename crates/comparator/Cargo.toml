@@ -1,0 +1,8 @@
+[package]
+name = "preflight-comparator"
+version = "0.1.0"
+edition = "2021"
+description = "Diffs two transaction replay runs and classifies behavioral differences"
+
+[dependencies]
+preflight-shared = { path = "../shared" }

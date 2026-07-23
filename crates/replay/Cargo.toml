@@ -1,0 +1,47 @@
+[package]
+name = "preflight-replay"
+version = "0.1.0"
+edition = "2021"
+description = "Executes the Preflight transaction fixture against a program build inside an in-process local Solana VM"
+
+[dependencies]
+preflight-shared = { path = "../shared" }
+
+borsh = "1.8"
+litesvm = "=0.15.0"
+solana-instruction = "=3.4.0"
+solana-instruction-error = "=2.4.0"
+solana-keypair = "=3.1.2"
+solana-message = "=4.3.0"
+solana-native-token = "=3.0.0"
+solana-pubkey = { version = "=4.2.0", features = ["borsh"] }
+solana-signer = "=3.0.1"
+solana-system-interface = { version = "=3.2.0", features = ["bincode"] }
+solana-transaction = "=4.1.5"
+solana-transaction-error = "=3.3.1"
+
+# Everything below is pinned to the exact versions litesvm 0.15.0 itself
+# resolves to (per its release Cargo.lock). Left to float, cargo picks
+# the latest semver-compatible release for each, but the Solana crates
+# are mid-migration from wincode 0.5 to 0.6 as of this writing, and
+# picking the latest of each independently mixes crates from both sides
+# of that migration into one build, which fails to compile. Pinning to a
+# known-consistent snapshot avoids that. Safe to loosen once the
+# migration finishes and the ecosystem settles on one wincode version.
+solana-address = "=2.6.1"
+solana-clock = "=3.1.1"
+solana-epoch-rewards = "=3.1.0"
+solana-epoch-schedule = "=3.2.0"
+solana-fee-calculator = "=3.2.2"
+solana-hash = "=4.5.0"
+solana-last-restart-slot = "=3.1.0"
+solana-nonce = "=3.2.0"
+solana-nonce-account = "=4.1.0"
+solana-rent = "=4.3.0"
+solana-short-vec = "=3.2.2"
+solana-slot-hashes = "=3.1.0"
+solana-slot-history = "=3.1.0"
+solana-stake-history = "=1.0.0"
+solana-sysvar = "=4.1.0"
+solana-sysvar-id = "=3.1.0"
+wincode = "=0.5.5"
