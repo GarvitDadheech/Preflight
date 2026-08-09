@@ -1,7 +1,7 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { motion } from "motion/react";
-import { AlertTriangle, Loader2, PlayCircle, Sparkles } from "lucide-react";
-import { PreflightApiError, runDemo, runPreflight, type Report } from "@/api";
+import { AlertTriangle, Loader2, PlayCircle } from "lucide-react";
+import { PreflightApiError, runPreflight, type Report } from "@/api";
 import { UploadZone } from "@/components/UploadZone";
 import { ScoreGauge } from "@/components/ScoreGauge";
 import { SummaryGrid } from "@/components/SummaryGrid";
@@ -13,8 +13,6 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 const DEMO_VIDEO_URL = "https://drive.google.com/file/d/1_cn-ZG8U8fIvYCVIVE8zCn18LTXAc9rz/view?usp=drive_link";
 
-type LoadingSource = "upload" | "demo" | null;
-
 const fadeUp = {
   hidden: { opacity: 0, y: 10 },
   show: { opacity: 1, y: 0 },
@@ -23,26 +21,15 @@ const fadeUp = {
 function App() {
   const [oldFile, setOldFile] = useState<File | null>(null);
   const [newFile, setNewFile] = useState<File | null>(null);
-  const [loading, setLoading] = useState<LoadingSource>(null);
-  const [slowNotice, setSlowNotice] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [report, setReport] = useState<Report | null>(null);
 
-  const isLoading = loading !== null;
   const canRun = oldFile !== null && newFile !== null && !isLoading;
-
-  useEffect(() => {
-    if (loading !== "demo") {
-      setSlowNotice(false);
-      return;
-    }
-    const timer = setTimeout(() => setSlowNotice(true), 4000);
-    return () => clearTimeout(timer);
-  }, [loading]);
 
   async function handleRun() {
     if (!oldFile || !newFile) return;
-    setLoading("upload");
+    setIsLoading(true);
     setError(null);
     try {
       setReport(await runPreflight(oldFile, newFile));
@@ -50,22 +37,7 @@ function App() {
       setError(err instanceof PreflightApiError ? err.message : "Something went wrong replaying these programs.");
       setReport(null);
     } finally {
-      setLoading(null);
-    }
-  }
-
-  async function handleDemo() {
-    setLoading("demo");
-    setError(null);
-    try {
-      setReport(await runDemo());
-    } catch (err) {
-      setError(
-        err instanceof PreflightApiError ? err.message : "Something went wrong running the bundled demo.",
-      );
-      setReport(null);
-    } finally {
-      setLoading(null);
+      setIsLoading(false);
     }
   }
 
@@ -127,36 +99,15 @@ function App() {
 
           <div className="flex flex-wrap items-center justify-center gap-3">
             <Button size="lg" disabled={!canRun} onClick={handleRun}>
-              {loading === "upload" && <Loader2 className="size-4 animate-spin" />}
-              {loading === "upload" ? "Replaying transactions…" : "Run Preflight"}
-            </Button>
-            <span className="text-xs text-muted-foreground">or</span>
-            <Button size="lg" variant="outline" disabled={isLoading} onClick={handleDemo}>
-              {loading === "demo" ? (
-                <Loader2 className="size-4 animate-spin" />
-              ) : (
-                <Sparkles className="size-4" />
-              )}
-              {loading === "demo" ? "Running bundled demo…" : "Run bundled demo"}
+              {isLoading && <Loader2 className="size-4 animate-spin" />}
+              {isLoading ? "Replaying transactions…" : "Run Preflight"}
             </Button>
           </div>
 
-          {slowNotice && (
-            <motion.p
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              className="text-center text-xs text-muted-foreground"
-            >
-              Still working — the first demo run compiles two Solana programs from source, which
-              can take up to a minute. Later runs are cached and near-instant.
-            </motion.p>
-          )}
-
           <p className="text-center text-xs text-balance text-muted-foreground">
-            Preflight replays a fixed example transaction sequence built for a small bundled
-            counter program (initialize / increment / decrement / set value). Upload two builds of
-            that same program to see a real diff, or run the bundled demo to see it work
-            immediately with no files of your own.
+            Preflight replays a real transaction sequence against both builds and shows you
+            exactly what changed — new failures, altered account state, and compute cost
+            differences — before you deploy.
           </p>
         </Card>
       </motion.div>
