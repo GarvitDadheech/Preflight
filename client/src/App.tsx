@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { motion } from "motion/react";
-import { AlertTriangle, Loader2, Sparkles } from "lucide-react";
+import { AlertTriangle, Loader2, PlayCircle, Sparkles } from "lucide-react";
 import { PreflightApiError, runDemo, runPreflight, type Report } from "@/api";
 import { UploadZone } from "@/components/UploadZone";
 import { ScoreGauge } from "@/components/ScoreGauge";
@@ -10,6 +10,8 @@ import { ThemeToggle } from "@/components/theme-toggle";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+
+const DEMO_VIDEO_URL = "https://drive.google.com/file/d/1_cn-ZG8U8fIvYCVIVE8zCn18LTXAc9rz/view?usp=drive_link";
 
 type LoadingSource = "upload" | "demo" | null;
 
@@ -77,7 +79,10 @@ function App() {
         className="flex items-start justify-between gap-4"
       >
         <div className="flex flex-col gap-2">
-          <h1 className="text-3xl font-semibold tracking-tight text-foreground">Preflight</h1>
+          <div className="flex items-center gap-2.5">
+            <img src="/logo.png" alt="Preflight logo" className="size-8" />
+            <h1 className="text-3xl font-semibold tracking-tight text-foreground">Preflight</h1>
+          </div>
           <p className="max-w-md text-sm text-muted-foreground">
             Replay the same transactions against two builds of a Solana program and see exactly
             what changed before you upgrade.
@@ -85,6 +90,21 @@ function App() {
         </div>
         <ThemeToggle />
       </motion.header>
+
+      <motion.div
+        initial="hidden"
+        animate="show"
+        variants={fadeUp}
+        transition={{ duration: 0.35, delay: 0.02 }}
+        className="flex justify-center"
+      >
+        <Button asChild size="lg" className="h-12 px-8 text-base">
+          <a href={DEMO_VIDEO_URL} target="_blank" rel="noopener noreferrer">
+            <PlayCircle className="size-5" />
+            Watch Demo
+          </a>
+        </Button>
+      </motion.div>
 
       <motion.div initial="hidden" animate="show" variants={fadeUp} transition={{ duration: 0.35, delay: 0.05 }}>
         <Card className="gap-5 p-6">

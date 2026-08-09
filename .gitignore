@@ -1,3 +1,9 @@
 /target
 examples/*/target
 preflight-out/
+
+# Claude Code / agent tooling artifacts, not project source.
+.claude/
+.agents/
+claude-session.jsonl
+skills-lock.json
