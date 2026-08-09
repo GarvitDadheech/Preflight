@@ -1,0 +1,25 @@
+[package]
+name = "preflight-server"
+version = "0.1.0"
+edition = "2021"
+description = "HTTP API for the Preflight dashboard: upload two program builds, get back a regression report"
+
+[[bin]]
+name = "preflight-server"
+path = "src/main.rs"
+
+[dependencies]
+preflight-cli = { path = "../cli" }
+preflight-comparator = { path = "../comparator" }
+preflight-replay = { path = "../replay" }
+preflight-shared = { path = "../shared" }
+
+anyhow = "1"
+axum = { version = "0.8", features = ["multipart"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+thiserror = "2"
+tokio = { version = "1", features = ["rt-multi-thread", "macros", "net", "signal"] }
+tower-http = { version = "0.7", features = ["cors", "trace"] }
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }

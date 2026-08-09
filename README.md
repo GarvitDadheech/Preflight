@@ -68,22 +68,32 @@ preflight/
                    execution results, and report structures. No
                    dependency on Solana or litesvm.
     replay/       Turns a fixture into real transactions and executes
-                   them against a program build inside litesvm.
+                   them against a program build inside litesvm, either
+                   from a file path or from raw bytes.
     comparator/   Diffs two replay runs and classifies each transaction.
                    Pure logic, no I/O.
     report/       Renders a comparison into report.md and report.json.
-    cli/          The `preflight` binary: argument parsing, driving the
-                   other crates, and progress/summary output.
+    cli/          The `preflight` binary (`run` / `demo` subcommands),
+                   plus a small library the server also depends on for
+                   building the example programs and running the
+                   replay + compare pipeline.
+    server/       The `preflight-server` binary: an HTTP API (axum)
+                   wrapping the same pipeline for the web dashboard.
   examples/
     counter-old/  Baseline example program.
     counter-new/  Same program with intentional behavior changes.
+  client/         Web dashboard (Vite + React + TypeScript) that talks
+                   to preflight-server.
 ```
 
 Each crate has one job, and the dependency graph only points one way:
-`cli` depends on `replay`, `comparator` and `report`; all of those depend
-on `shared`; `shared` depends on nothing Solana-specific. `comparator`
-and `report` never touch litesvm or the filesystem-heavy parts of the
-pipeline, which makes them straightforward to test or reuse on their own.
+`cli` and `server` depend on `replay`, `comparator` and `report`; all of
+those depend on `shared`; `shared` depends on nothing Solana-specific.
+`comparator` and `report` never touch litesvm or the filesystem-heavy
+parts of the pipeline, which makes them straightforward to test or reuse
+on their own. `server` reuses `cli`'s library half (`preflight_cli::build`
+and `preflight_cli::pipeline`) rather than re-implementing "build the
+example programs" or "replay and compare" behind the HTTP API.
 
 `examples/counter-old` and `examples/counter-new` are deliberately kept
 out of the main Cargo workspace (each declares its own empty
@@ -137,6 +147,47 @@ doesn't understand and fail, rather than produce a meaningful diff. A
 general-purpose version of this tool would need a way to describe an
 arbitrary program's instructions and accounts (an Anchor IDL, for
 example) instead of a hardcoded fixture.
+
+## Running the dashboard
+
+The dashboard is a Vite + React + TypeScript frontend (`client/`), styled with
+Tailwind CSS and shadcn/ui and animated with Motion, talking to
+`preflight-server`, a thin HTTP wrapper (`crates/server`) around the same
+replay/compare pipeline the CLI uses. It runs entirely on your machine —
+nothing is deployed anywhere by default. The chosen palette and typography
+("Midnight Signal" + Geist, dark-mode-first) are documented in `brand.md` at
+the repo root.
+
+Start the API server (first request that needs the bundled example
+programs will build them, which takes a bit; after that it's cached):
+
+```bash
+cargo run -p preflight-server
+```
+
+In a second terminal, start the frontend:
+
+```bash
+cd client
+npm install   # first time only
+npm run dev
+```
+
+Open the URL Vite prints (typically `http://localhost:5173`). The dev
+server proxies `/api/*` requests to `preflight-server` on port 8787 (see
+`client/vite.config.ts`), so no CORS setup is needed locally. From there:
+
+- **Run bundled demo** replays the fixture against the bundled
+  `counter-old`/`counter-new` example with no upload needed — the
+  fastest way to see a real report.
+- Uploading your own **old** and **new** `.so` files runs the same
+  pipeline against them, subject to the same scope note as the CLI's
+  `run` command above: they need to implement the bundled counter
+  program's instruction layout to produce a meaningful result.
+
+`crates/server` exposes three endpoints: `GET /api/health`,
+`POST /api/demo`, and `POST /api/run` (multipart form fields `old` and
+`new`), each returning the same JSON shape as `report.json`.
 
 ## Expected output
 

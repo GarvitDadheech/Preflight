@@ -6,6 +6,31 @@ use indicatif::{ProgressBar, ProgressStyle};
 
 use preflight_shared::{Fixture, Report, TxExecutionResult};
 
+/// Runs generate-fixture -> replay old -> replay new -> compare with no
+/// terminal output, and returns the resulting report.
+///
+/// This is the piece [`run_pipeline`] and `preflight-server`'s HTTP
+/// handlers both need; `run_pipeline` wraps it with progress bars,
+/// printing, and writing report files to disk, while the server just
+/// serializes the [`Report`] straight into an HTTP response.
+pub fn execute(old_so: &Path, new_so: &Path) -> Result<Report> {
+    let fixture = preflight_replay::generate_fixture();
+
+    let old_results = preflight_replay::replay(old_so, &fixture, |_, _| {})
+        .with_context(|| format!("replay failed against {}", old_so.display()))?;
+    let new_results = preflight_replay::replay(new_so, &fixture, |_, _| {})
+        .with_context(|| format!("replay failed against {}", new_so.display()))?;
+
+    preflight_comparator::compare(
+        &old_so.display().to_string(),
+        &new_so.display().to_string(),
+        &fixture.transactions,
+        &old_results,
+        &new_results,
+    )
+    .context("failed to compare replay results")
+}
+
 /// Runs the full record -> replay -> compare -> report pipeline against
 /// two already-built program binaries, printing progress and a summary
 /// to the terminal along the way.

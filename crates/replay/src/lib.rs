@@ -9,7 +9,7 @@ mod engine;
 mod keys;
 mod program_abi;
 
-pub use engine::replay;
+pub use engine::{replay, replay_bytes};
 
 use preflight_shared::{Fixture, KeypairBytes};
 use solana_keypair::Keypair;

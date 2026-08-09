@@ -1,10 +1,9 @@
-mod build;
 mod cli;
-mod pipeline;
 
 use anyhow::Result;
 use clap::Parser;
 use console::style;
+use preflight_cli::{build, pipeline};
 
 use cli::{Cli, Command};
 

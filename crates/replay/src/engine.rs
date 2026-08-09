@@ -28,22 +28,41 @@ fn program_id() -> Pubkey {
     Pubkey::new_from_array([7u8; 32])
 }
 
-/// Executes `fixture`'s transaction sequence against the program at
-/// `program_path` inside a fresh, in-process litesvm instance.
+/// Executes `fixture`'s transaction sequence against the program stored
+/// at `program_path` inside a fresh, in-process litesvm instance.
 ///
 /// `on_step` is invoked after each transaction executes, so callers can
 /// report progress as the replay proceeds.
 pub fn replay(
     program_path: &Path,
     fixture: &Fixture,
+    on_step: impl FnMut(&TransactionSpec, &TxExecutionResult),
+) -> Result<Vec<TxExecutionResult>> {
+    let bytes = std::fs::read(program_path).map_err(|e| Error::ProgramLoad {
+        path: program_path.display().to_string(),
+        reason: e.to_string(),
+    })?;
+    replay_bytes(&bytes, program_path.display().to_string(), fixture, on_step)
+}
+
+/// Executes `fixture`'s transaction sequence against a program supplied
+/// as raw `.so` bytes (for example, straight from an HTTP upload)
+/// inside a fresh, in-process litesvm instance.
+///
+/// `label` is only used in error messages, to identify which program
+/// failed to load.
+pub fn replay_bytes(
+    program_bytes: &[u8],
+    label: String,
+    fixture: &Fixture,
     mut on_step: impl FnMut(&TransactionSpec, &TxExecutionResult),
 ) -> Result<Vec<TxExecutionResult>> {
     let program_id = program_id();
 
     let mut svm = LiteSVM::new();
-    svm.add_program_from_file(program_id, program_path)
+    svm.add_program(program_id, program_bytes)
         .map_err(|e| Error::ProgramLoad {
-            path: program_path.display().to_string(),
+            path: label,
             reason: e.to_string(),
         })?;
 
